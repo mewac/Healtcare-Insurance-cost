@@ -1,0 +1,42 @@
+library(tidyverse)
+library(randomForest)
+library(party)
+library(Metrics)
+library(GGally)
+library(caret)
+
+#Checking the data
+glimpse(data)
+anyNA(data)
+
+#convert to factor
+data <- data %>%
+  mutate_if(is.character, as.factor)
+
+#Checking the correlation
+ggcorr(data, label = TRUE)
+
+set.seed(123)
+
+#Spliting the data
+ind <- createDataPartition(data$charges, p = 0.8, list = FALSE)
+train <- data[ind, ]
+test <- data[-ind, ]
+
+#Building models
+model1 <- lm(charges ~ age+bmi+children+charges+smoker+region+sex, train)
+summary(model1)
+pred1 <- predict(model1, test)
+
+model2 <- randomForest(charges ~ ., train)
+pred2 <- predict(model2, test)
+rmse(test$charges, predict(model2, test))
+
+model3 <- ctree(charges ~ ., train)
+pred3 <- predict(model3, test)
+pred3
+
+#Evaluate the models performance
+rmse(test$charges, predict(model1, test))
+rmse(test$charges, predict(model2, test))
+rmse(test$charges, predict(model3, test))
